@@ -1,5 +1,7 @@
 const User = require('../models/user.model');
+const UserService = require('../services/user.service');
 const { validationResult } = require('express-validator');
+const BlacklistToken = require('../models/blacklistToken.model');
 
 module.exports.registerUser = async (req, res, next) => {
     // 1. Log the data to verify (You already did this, it works!)
@@ -41,7 +43,7 @@ module.exports.registerUser = async (req, res, next) => {
     }
 }
 
-module.exports.loginUser = async (req, res, next) => {
+module.exports.loginUser = async (req, res, next) => { 
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -69,4 +71,20 @@ module.exports.loginUser = async (req, res, next) => {
     // 4. Send Response
     res.cookie('token', token); // Save token in a cookie (optional but recommended)
     res.status(200).json({ token, user });
+}
+
+module.exports.getUserProfile = async (req, res, next) => {
+    res.status(200).json({user: req.user});
+}
+
+module.exports.logoutUser = async (req, res, next) => {
+    res.clearCookie('token');
+    
+    // Get the token from cookies or headers
+    const token = req.cookies.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+
+    // Save token to blacklist
+    await BlacklistToken.create({ token });
+
+    res.status(200).json({ message: 'Logged out' });
 }

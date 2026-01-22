@@ -67,3 +67,49 @@ Notes:
   }
 }
 ```
+
+## Profile Endpoint
+
+- **Endpoint:** `GET /users/profile`
+- **Description:** Returns the authenticated user's profile. The route is protected by the `authUser` middleware and requires a valid JWT token.
+- **Authentication:** Provide the JWT either in the `token` cookie (commonly set on login) or in the `Authorization` header as `Bearer <token>`.
+- **Responses:**
+  - `200 OK` — Returns the currently authenticated user object.
+
+```json
+{
+  "user": {
+    "id": 1,
+    "firstname": "Alice",
+    "lastname": "Smith",
+    "email": "alice@example.com",
+    "socketId": null
+  }
+}
+```
+
+  - `401 Unauthorized` — Missing or invalid token. Example:
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+## Logout Endpoint
+
+- **Endpoint:** `GET /users/logout`
+- **Description:** Logs out the authenticated user. Clears the `token` cookie and saves the token to the blacklist so it cannot be reused. The route is protected by the `authUser` middleware and requires a valid JWT.
+- **Authentication:** Same as `/users/profile` — token in cookie or `Authorization` header.
+- **Responses:**
+  - `200 OK` — Logout successful.
+
+```json
+{
+  "message": "Logged out"
+}
+```
+
+  - `401 Unauthorized` — Missing or invalid token.
+
+**Notes:** The logout flow saves the token to the `BlacklistToken` model so subsequent requests using that token will be rejected by the authentication middleware.
