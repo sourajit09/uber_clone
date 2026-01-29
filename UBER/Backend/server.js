@@ -12,14 +12,19 @@ const server = http.createServer(app);
 
 connectToDb()
     .then(async () => {
-        // This command creates the tables if they don't exist
-        await sequelize.sync(); 
+        try{
+        await sequelize.sync({alter: true}); 
         console.log("All tables synced successfully!");
 
         server.listen(port, () => {
             console.log(`Server is running on port ${port}`);
         });
+    } catch(error){
+        console.log("sync error",error);
+        
+    }
     })
     .catch((err) => {
-        console.log("Failed to connect to DB:", err);
+        console.error('Failed to connect to the database:', err);
     });
+    

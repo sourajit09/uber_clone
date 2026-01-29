@@ -1,19 +1,26 @@
+const Captain = require('../models/captain.model');
 const Usermodel = require('../models/user.model');
 
 
 module.exports.createUser = async({
-    firstname,lastname,email,password
+    firstname,lastname,email,password,color,plate,capacity,vehicleType
 }) => {
-    if(!firstname || !email || !password){
+    if(!firstname || !email || !password || !color || !plate || !capacity || !vehicleType){
         throw new Error('Missing required fields');
     }
-    const user = Usermodel.create({
+    const captain = CaptainModel.create({
         fullname: {
             firstname,
             lastname
         }, 
         email,
-        password
+        password,
+        vehicle:{
+            color,
+            plateNumber: plate,
+            capacity,
+            vehicleType
+        }
     })
 
     return user;

@@ -13,6 +13,11 @@ module.exports.registerUser = async (req, res, next) => {
     }
 
     const { fullname, email, password } = req.body;
+    const isUserAlreadyExist = await User.findOne({ where: { email } });
+
+    if (isUserAlreadyExist) {
+        return res.status(409).json({ message: 'User with this email already exists' });
+    }
 
     // CHECK IF FULLNAME EXISTS BEFORE USING IT
     if (!fullname || !fullname.firstname) {
@@ -26,7 +31,7 @@ module.exports.registerUser = async (req, res, next) => {
         // 3. Create User - THIS IS WHERE THE FIX IS
         // We manually map "fullname.firstname" to the database column "firstname"
         const user = await User.create({
-            firstname: fullname.firstname, // 👈 Extracting the nested value
+            firstname: fullname.firstname, //  Extracting the nested value
             lastname: fullname.lastname || "", // Handle optional lastname
             email: email,
             password: hashedPassword
