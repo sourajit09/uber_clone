@@ -24,7 +24,7 @@ module.exports.registerCaptain = async (req, res, next) => {
     const hashedPassword = await Captain.hashPassword(password);
 
     // 5. Create Captain in MySQL
-    // 👇 NOTICE THE MAPPING: JSON (Right) -> DB Column (Left)
+    //  NOTICE THE MAPPING: JSON (Right) -> DB Column (Left)
     const captain = await Captain.create({
         firstname: fullname.firstname,
         lastname: fullname.lastname,
@@ -46,12 +46,44 @@ module.exports.registerCaptain = async (req, res, next) => {
     res.status(201).json({ token, captain });
 }
 catch (error) {
-        // 👇 THIS WILL SHOW THE REAL ERROR IN TERMINAL
-        console.error("--------------------------------");
+        //  THIS WILL SHOW THE REAL ERROR IN TERMINAL
+      
         console.error("REAL ERROR MESSAGE:", error.message);
         console.error("SQL ERROR:", error.parent ? error.parent.sqlMessage : "No SQL message");
-        console.error("--------------------------------");
+        
         
         res.status(500).json({ message: "Internal Server Error", error: error.message });
     }
+}
+module.exports.loginCaptain = async (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+    const { email, password } = req.body;
+
+    const captain = await Captain.findOne({ where: { email } });
+    if (!captain) {
+        return res.status(400).json({ message: 'Invalid email or password' });
+    }
+    const isMatch = await captain.comparePassword(password);
+    if (!isMatch) {
+        return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    const token = captain.generateAuthToken();
+    res.cookie('token', token);
+    res.status(200).json({ token, captain });
+}
+module.exports.getCaptainProfile = async (req, res, next) => {
+    res.status(200).json({ captain: req.captain });
+}
+module.exports.logoutCaptain = async (req, res, next) => {
+    res.clearCookie('token');
+    const token = req.cookies.token || req.header('Authorization')?.split(' ')[1];
+    if (token) {
+        await BlacklistToken.create({ token });
+    }
+
+    res.status(200).json({ message: 'Logged out successfully' });
 }
